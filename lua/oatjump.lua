@@ -1,4 +1,4 @@
-local oatjump = {}
+local M = {}
 local config = {
     separators = { ' ', '_', "-", "/", "\\" },
     keymaps = {
@@ -29,7 +29,7 @@ local function backward (str, pos)
   return pos - min_val
 end
 
-function oatjump.locate_next()
+function M.locate_next()
     local new_pos_x
     local new_pos_y
     local current_buf = vim.api.nvim_get_current_buf()
@@ -46,7 +46,7 @@ function oatjump.locate_next()
     return new_pos_x, new_pos_y
 end
 
-function oatjump.locate_prev()
+function M.locate_prev()
     local new_pos_x
     local new_pos_y
     local current_buf = vim.api.nvim_get_current_buf()
@@ -64,14 +64,15 @@ function oatjump.locate_prev()
     return new_pos_x, new_pos_y
 end
 
-function oatjump.setup(user_config)
+function M.setup(user_config)
     user_config = user_config or {}
     for option, value in pairs(user_config) do
         config[option] = value
     end
 
-    vim.keymap.set({"n", "v"}, config["forward"], "<Cmd>lua require('oatjump').locate_next()<CR>", {})
-    vim.keymap.set({"n", "v"}, config["backward"], "<Cmd>lua require('oatjump').locate_prev()<CR>", {})
+    M.separators = config['separators']
+    vim.keymap.set({"n", "v"}, config["forward"], function() M.locate_next() end, {})
+    vim.keymap.set({"n", "v"}, config["backward"], function() M.locate_prev() end, {})
 end
 
-return oatjump
+return M
