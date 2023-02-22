@@ -13,7 +13,7 @@ config = {
 }
 ```
 
-after installed with your plugin manager of choice, simply add
+after installed with your plugin manager of choice, simply add the following to your `init.lua`
 ```lua
 require('oatjump').setup({})
 ```
