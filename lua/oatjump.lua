@@ -1,63 +1,63 @@
 local M = {}
+
 local config = {
-    separators = { ' ', '_', "-", "/", "\\" },
+    separators = {' ', '%-', '_', '.', '/', '\t'},
     keymaps = {
         forward = "<C-l>",
         backward = "<C-h>",
     },
 }
 
-local function forward (str, pos)
-  local rest_of_line = string.sub(str, pos, string.len(str))
-  local min_val = vim.fn.strdisplaywidth(rest_of_line)
-  for _, c in pairs(M.separators) do
-    if string.find(rest_of_line, c) then
-      min_val = math.min(min_val, string.find(rest_of_line, c))
-    end
-  end
-  return pos + min_val - 1
-end
-
-local function backward (str, pos)
-  local start_of_line = string.reverse(string.sub(str, 1, pos))
-  local min_val = pos
-  for _, c in pairs(M.separators) do
-    if string.find(start_of_line, c) then
-      min_val = math.min(min_val, string.find(start_of_line, c))
-    end
-  end
-  return pos - min_val
-end
-
-function M.locate_next()
-    local new_pos_x
-    local new_pos_y
-    local pos = vim.api.nvim_win_get_cursor(0)
-    local current_line = vim.api.nvim_buf_get_lines(0, pos[2], pos[2] + 1, false)[1]
-    if pos[1] >= string.length(current_line) then
-        new_pos_x = 1
-        new_pos_y = pos[2] + 1
+function M.jump_to_next()
+    local current_line = vim.api.nvim_get_current_line()
+    local cursor_position = vim.api.nvim_win_get_cursor(0)
+    local row, col = cursor_position[1], cursor_position[2]
+    local line_length = vim.fn.strdisplaywidth(current_line) - 1
+    if col >= line_length then
+        if row < vim.api.nvim_buf_line_count(0) then
+            vim.api.nvim_win_set_cursor(0, {row + 1, 0})
+        end
     else
-        new_pos_x = forward(current_line, pos[1])
-        new_pos_y = pos[2]
+        local search_pattern = "[^"..table.concat(M.separators, "").."]["..table.concat(M.separators, "").."]"
+        local next_pos = string.find(current_line, search_pattern, col + 1)
+
+        if next_pos then
+            vim.api.nvim_win_set_cursor(0, {row, next_pos})
+        else
+            vim.api.nvim_win_set_cursor(0, {row, line_length})
+        end
     end
-    return new_pos_x, new_pos_y
 end
 
-function M.locate_prev()
-    local new_pos_x
-    local new_pos_y
-    local pos = vim.api.nvim_win_get_cursor(0)
-    local current_line = vim.api.nvim_buf_get_lines(0, pos[2], pos[2] + 1, false)[1]
-    if pos[1] <= 1 then
-        local previous_line = vim.api.nvim_buf_get_lines(0, pos[2] - 1, pos[2], false)[1]
-        new_pos_x = vim.fn.strdisplaywidth(previous_line)
-        new_pos_y = pos[2] - 1
+function M.jump_to_prev()
+    local current_line = vim.api.nvim_get_current_line()
+    local cursor_position = vim.api.nvim_win_get_cursor(0)
+    local row, col = cursor_position[1], cursor_position[2]
+    if col == 0 then
+        if row > 1 then
+            local prev_line = vim.api.nvim_buf_get_lines(0, row - 2, row - 1, false)[1]
+            local prev_line_length = vim.fn.strdisplaywidth(prev_line) - 1
+            vim.api.nvim_win_set_cursor(0, {row - 1, prev_line_length})
+        end
     else
-        new_pos_x = backward(current_line, pos[1])
-        new_pos_y = pos[2]
+        local search_pattern = "[^"..table.concat(M.separators, "").."]["..table.concat(M.separators, "").."]"
+        local search_index = col - 1
+        local prev_pos = nil
+
+        while search_index > 0 do
+            if string.sub(current_line, search_index, search_index + 1):match(search_pattern) then
+                prev_pos = search_index
+                break
+            end
+            search_index = search_index - 1
+        end
+
+        if prev_pos then
+            vim.api.nvim_win_set_cursor(0, {row, prev_pos})
+        else
+            vim.api.nvim_win_set_cursor(0, {row, 0})
+        end
     end
-    return new_pos_x, new_pos_y
 end
 
 function M.setup(user_config)
@@ -67,8 +67,8 @@ function M.setup(user_config)
     end
 
     M.separators = config['separators']
-    vim.keymap.set({"n", "v"}, config["keymaps"]["forward"], function() M.locate_next() end, {})
-    vim.keymap.set({"n", "v"}, config["keymaps"]["backward"], function() M.locate_prev() end, {})
+    vim.keymap.set({"n", "v"}, config["keymaps"]["forward"], function() M.jump_to_next() end, {})
+    vim.keymap.set({"n", "v"}, config["keymaps"]["backward"], function() M.jump_to_prev() end, {})
 end
 
 return M
