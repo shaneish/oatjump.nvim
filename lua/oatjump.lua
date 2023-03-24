@@ -59,7 +59,7 @@ function M.jump_to_prev()
     if col == 0 then
         if row > 1 then
             local prev_line = vim.api.nvim_buf_get_lines(0, row - 2, row - 1, false)[1]
-            local prev_line_length = vim.fn.strdisplaywidth(prev_line) - 1
+            local prev_line_length = vim.fn.strdisplaywidth(prev_line)
             vim.api.nvim_win_set_cursor(0, {row - 1, prev_line_length})
         end
     else
