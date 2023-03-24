@@ -1,12 +1,35 @@
 local M = {}
 
 local config = {
-    separators = {' ', '%-', '_', '.', '/', '\t'},
+    separators = {' ', '-', '_', '.', '/', '\t', '\\'},
     keymaps = {
         forward = "<C-l>",
         backward = "<C-h>",
     },
 }
+
+local function char_is_in_array(char, array)
+    for _, value in ipairs(array) do
+        if char == value then
+            return true
+        end
+    end
+    return false
+end
+
+local function get_separator_pattern()
+    local adjusted_separators = {}
+    local special_chars = {'-', '%', '^', '$', '.', '[', ']', '*', '+', '?', '(', ')', '{', '}'}
+    for _, separator in ipairs(M.separators) do
+        if char_is_in_array(separator, special_chars) then
+            table.insert(adjusted_separators, "%"..separator)
+        else
+            table.insert(adjusted_separators, separator)
+        end
+    end
+    local separator_pattern = "[^"..table.concat(adjusted_separators, "").."]["..table.concat(adjusted_separators, "").."]"
+    return separator_pattern
+end
 
 function M.jump_to_next()
     local current_line = vim.api.nvim_get_current_line()
@@ -18,7 +41,7 @@ function M.jump_to_next()
             vim.api.nvim_win_set_cursor(0, {row + 1, 0})
         end
     else
-        local search_pattern = "[^"..table.concat(M.separators, "").."]["..table.concat(M.separators, "").."]"
+        local search_pattern = get_separator_pattern()
         local next_pos = string.find(current_line, search_pattern, col + 1)
 
         if next_pos then
@@ -40,7 +63,7 @@ function M.jump_to_prev()
             vim.api.nvim_win_set_cursor(0, {row - 1, prev_line_length})
         end
     else
-        local search_pattern = "[^"..table.concat(M.separators, "").."]["..table.concat(M.separators, "").."]"
+        local search_pattern = get_separator_pattern()
         local search_index = col - 1
         local prev_pos = nil
 
