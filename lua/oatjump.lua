@@ -1,18 +1,14 @@
 local M = {}
 
 local config = {
-    separators = {' ', '-', '_', '.', '/', '\t', '\\'},
     keymaps = {
         forward = "<C-l>",
         backward = "<C-h>",
-        forward_word = "<C-A-l>",
-        backward_word = "<C-A-h>",
     },
     word_marker = "a-zA-Z0-9",
 }
 
 function M.next_word(col, line, initial)
-  local line_length = vim.fn.strdisplaywidth(line)
   if (col ~= 1) or (string.find(string.sub(line, 1, 1), M.word_start, 1) == nil) or not initial then
     print(col, string.sub(line, 1, 1))
     local next_pos = string.find(line, M.word_pat, col)
@@ -89,8 +85,8 @@ function M.setup(user_config)
     M.separators = config["separators"]
     M.word_pat = "[^" .. config['word_marker'] .. "][" .. config['word_marker'] .. "]"
     M.word_start = "[" .. config['word_marker'] .. "]"
-    vim.keymap.set({"n", "v"}, config["keymaps"]["forward"], function() M.jump_to_next(false) end, {})
-    vim.keymap.set({"n", "v"}, config["keymaps"]["backward"], function() M.jump_to_prev(false) end, {})
+    vim.keymap.set("n", config["keymaps"]["forward"], function() M.jump_to_next(false) end, {})
+    vim.keymap.set("n", config["keymaps"]["backward"], function() M.jump_to_prev(false) end, {})
 end
 
 return M
