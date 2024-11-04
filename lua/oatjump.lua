@@ -87,6 +87,8 @@ function M.setup(user_config)
     M.word_start = "[" .. config['word_marker'] .. "]"
     vim.keymap.set("n", config["keymaps"]["forward"], function() M.jump_to_next(false) end, {})
     vim.keymap.set("n", config["keymaps"]["backward"], function() M.jump_to_prev(false) end, {})
+    vim.keymap.set("i", config["keymaps"]["forward"], function() M.jump_to_next(false) end, {})
+    vim.keymap.set("i", config["keymaps"]["backward"], function() M.jump_to_prev(false) end, {})
 end
 
 return M
